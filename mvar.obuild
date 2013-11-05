@@ -1,0 +1,14 @@
+name: mvar
+version: 0.1.0
+synopsis: Mutable threadsafe variables
+obuild-ver: 1
+
+library mvar
+  src-dir: lib
+  modules: mvar
+  build-deps: threads
+
+test test_mvar
+  main: test_mvar.ml
+  src-dir: test
+  build-deps: mvar
