@@ -1,5 +1,15 @@
 open Mvar
 
+module Mutex = struct
+	include Mutex
+	(** execute the function f with the mutex hold *)
+	let execute lock f =
+		Mutex.lock lock;
+		let r = begin try f () with exn -> Mutex.unlock lock; raise exn end; in
+		Mutex.unlock lock;
+		r
+end
+
 (* Helpers. *)
 let print_m = Mutex.create ()
 let printer message =
