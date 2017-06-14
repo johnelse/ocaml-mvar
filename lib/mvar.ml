@@ -28,7 +28,6 @@ let create x =
 		c = Condition.create ();
 	}
 
-(* Wait until mvar holds a value, then return it and leave the mvar empty. *)
 let take mvar =
 	let rec check () =
 		match !(mvar.data) with
@@ -42,7 +41,6 @@ let take mvar =
 	in
 	Mutex.execute mvar.m (fun () -> check ())
 
-(* Non-blocking take - if the mvar holds no value, return None. *)
 let try_take mvar =
 	Mutex.execute mvar.m (fun () ->
 		match !(mvar.data) with
@@ -52,7 +50,6 @@ let try_take mvar =
 			Condition.signal mvar.c;
 			Some x)
 
-(* Wait until the mvar is empty, then put x in the mvar. *)
 let put mvar x =
 	let rec check () =
 		match !(mvar.data) with
@@ -65,7 +62,6 @@ let put mvar x =
 	in
 	Mutex.execute mvar.m (fun () -> check ())
 
-(* Non-blocking put - if the mvar is empty the put x in the mvar, otherwise return false. *)
 let try_put mvar x =
 	Mutex.execute mvar.m (fun () ->
 		match !(mvar.data) with
@@ -76,14 +72,12 @@ let try_put mvar x =
 			Condition.signal mvar.c;
 			true)
 
-(* Test whether the mvar is empty. *)
 let is_empty mvar =
 	Mutex.execute mvar.m (fun () ->
 		match !(mvar.data) with
 		| Some _ -> false
 		| None -> true)
 
-(* Wait until the mvar is populated, then set its value to x and return the previous value. *)
 let swap mvar x =
 	let rec check () =
 		match !(mvar.data) with
@@ -97,7 +91,6 @@ let swap mvar x =
 	in
 	Mutex.execute mvar.m (fun () -> check ())
 
-(* Wait until the mvar is populated, then use the supplied function to modify its value.*)
 let modify mvar f =
 	let rec check () =
 		match !(mvar.data) with
