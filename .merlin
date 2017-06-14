@@ -1,0 +1,6 @@
+PKG oUnit threads
+S lib
+S test
+
+B _build/default/lib
+B _build/default/test
