@@ -19,6 +19,7 @@ remove: [
 depends: [
   "jbuilder" {build}
   "ocamlfind" {build}
+  "ounit" {test}
 ]
 available: [
   ocaml-version >= "4.02.0"

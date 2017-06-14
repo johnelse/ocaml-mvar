@@ -1,42 +1,93 @@
-open Mvar
+open OUnit2
 
 module Mutex = struct
-	include Mutex
-	(** execute the function f with the mutex hold *)
-	let execute lock f =
-		Mutex.lock lock;
-		let r = begin try f () with exn -> Mutex.unlock lock; raise exn end; in
-		Mutex.unlock lock;
-		r
+  include Mutex
+  (** execute the function f with the mutex hold *)
+  let execute lock f =
+    Mutex.lock lock;
+    let r = begin try f () with exn -> Mutex.unlock lock; raise exn end; in
+    Mutex.unlock lock;
+    r
 end
 
 (* Helpers. *)
 let print_m = Mutex.create ()
 let printer message =
-	Mutex.execute print_m (fun () ->
-		print_endline message)
+  Mutex.execute print_m (fun () ->
+    print_endline message)
 
-(* Tests. *)
-let sequential_test () =
-	printer "Starting sequential test";
-	let mvar = create_empty () in
-	let value = "hello" in
-	printer "Testing is_empty on empty mvar";
-	if not(is_empty mvar) then failwith "is_empty failed";
-	printer "Testing try_get on empty mvar";
-	if (try_take mvar) <> None then failwith "try_get failed";
-	printer "Testing try_put on empty mvar";
-	if not(try_put mvar value) then failwith "try_put failed";
-	printer "Testing is_empty on populated mvar";
-	if is_empty mvar then failwith "is_empty failed";
-	printer "Testing try_put on populated mvar";
-	if (try_put mvar value) then failwith "try_put failed";
-	printer "Testing try_get on populated mvar";
-	match try_take mvar with
-	| None -> failwith "try_get failed"
-	| Some x -> if x <> value then failwith "try_get failed";
-	printer "Testing is_empty on empty mvar";
-	if not(is_empty mvar) then failwith "is_empty failed"
+let test_empty _ =
+  let mvar = Mvar.create_empty () in
+  assert_bool
+    "create_empty should create an empty mvar"
+    (Mvar.is_empty mvar);
+  assert_equal
+    ~msg:"try_take on an empty mvar should return None"
+    (Mvar.try_take mvar) None;
+  assert_bool
+    "try_put on an empty mvar should return true"
+    (Mvar.try_put mvar "hello")
 
-let _ =
-	sequential_test ()
+let test_not_empty _ =
+  let mvar = Mvar.create "hello" in
+  assert_bool
+    "create should not create an empty mvar"
+    (not (Mvar.is_empty mvar));
+  assert_bool
+    "try_put on a non-empty mvar should return false"
+    (not (Mvar.try_put mvar "hello"));
+  assert_equal
+    ~msg:"try_take on a non-empty mvar should return a value"
+    (Mvar.try_take mvar) (Some "hello")
+
+let test_take_leaves_empty _ =
+  let mvar = Mvar.create "hello" in
+  assert_equal
+    ~msg:"take on a non-empty mvar should return a value"
+    (Mvar.take mvar) ("hello");
+  assert_bool
+    "take should leave an empty mvar"
+    (Mvar.is_empty mvar)
+
+let test_put_leaves_non_empty _ =
+  let mvar = Mvar.create_empty () in
+  Mvar.put mvar "hello";
+  assert_bool
+    "put should leave an empty non-empty"
+    (not (Mvar.is_empty mvar))
+
+let test_swap _ =
+  let mvar = Mvar.create "hello" in
+  assert_equal
+    ~msg:"swap should return the previous mvar contents"
+    (Mvar.swap mvar "goodbye") ("hello");
+  assert_equal
+    ~msg:"swap should put the new value in the mvar"
+    (Mvar.take mvar) ("goodbye")
+
+let test_modify _ =
+  let mvar = Mvar.create "hello" in 
+  Mvar.modify mvar (fun str -> str ^ str);
+  assert_equal
+    ~msg:"modify should modify the value in the mvar"
+    (Mvar.take mvar) ("hellohello")
+
+let sequential =
+  "sequential" >:::
+    [
+      "test_empty" >:: test_empty;
+      "test_not_empty" >:: test_not_empty;
+      "test_take_leaves_empty" >:: test_take_leaves_empty;
+      "test_put_leaves_non_empty" >:: test_put_leaves_non_empty;
+      "test_swap" >:: test_swap;
+      "test_modify" >:: test_modify;
+    ]
+
+let base_suite =
+  "base_suite" >:::
+    [
+      sequential;
+    ]
+
+let () =
+  OUnit2.run_test_tt_main base_suite
