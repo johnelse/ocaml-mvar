@@ -1,17 +1,16 @@
-dist/build/lib-mvar/mvar.cmxa:
-	obuild configure --enable-tests
-	obuild build
+.PHONY: build clean test
 
-install:
-	ocamlfind install mvar lib/META \
-		$(wildcard dist/build/lib-mvar/*)
-
-uninstall:
-	ocamlfind remove mvar
-
-.PHONY: clean test
-clean:
-	rm -rf dist
+build:
+	jbuilder build @install
 
 test:
-	obuild test --output
+	jbuilder runtest
+
+install:
+	jbuilder install
+
+uninstall:
+	jbuilder uninstall
+
+clean:
+	rm -rf _build *.install */.merlin

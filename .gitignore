@@ -1,3 +1,4 @@
-*.swp
+*.install
+*/.merlin
+_build
 
-dist
