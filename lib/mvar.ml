@@ -96,7 +96,7 @@ let modify mvar f =
     match !(mvar.data) with
     | None ->
       Condition.wait mvar.c mvar.m;
-      check()
+      check ()
     | Some x ->
       mvar.data := (Some (f x));
       Condition.signal mvar.c
