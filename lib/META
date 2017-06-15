@@ -1,8 +1,0 @@
-version = "0.1.0"
-description = "Threadsafe mutable variables"
-requires = "threads"
-archive(byte) = "mvar.cma"
-archive(byte, plugin) = "mvar.cma"
-archive(native) = "mvar.cmxa"
-archive(native, plugin) = "mvar.cmxs"
-exists_if = "mvar.cma"
