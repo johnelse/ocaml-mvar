@@ -83,10 +83,50 @@ let sequential =
       "test_modify" >:: test_modify;
     ]
 
+let test_concurrent_put_take _ =
+  let mvar = Mvar.create_empty () in
+  let put_thread () =
+    for _ = 1 to 100 do
+      Mvar.put mvar "hello"
+    done
+  in
+  let take_thread () =
+    for _ = 1 to 100 do
+      ignore(Mvar.take mvar)
+    done
+  in
+  let thread1 = Thread.create put_thread () in
+  let thread2 = Thread.create take_thread () in
+  Thread.join thread1;
+  Thread.join thread2
+
+let test_concurrent_increment _ =
+  let mvar = Mvar.create 0 in
+  let increment_by_100 () =
+    for _ = 1 to 100 do
+      Mvar.modify mvar (fun x -> x + 1);
+    done
+  in
+  let thread1 = Thread.create increment_by_100 () in
+  let thread2 = Thread.create increment_by_100 () in
+  Thread.join thread1;
+  Thread.join thread2;
+  assert_equal
+    ~msg:"mvar should contain 200"
+    (Mvar.take mvar) 200
+
+let concurrent =
+  "concurrent" >:::
+    [
+      "test_concurrent_put_take" >:: test_concurrent_put_take;
+      "test_concurrent_increment" >:: test_concurrent_increment;
+    ]
+
 let base_suite =
   "base_suite" >:::
     [
       sequential;
+      concurrent;
     ]
 
 let () =
